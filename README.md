@@ -1,8 +1,11 @@
 # Sup
 
-**TODO: Add description**
-
+Concurrent viewer counter using dynamic supervisors and genservers
 ## Installation
+
+Export the env below to increase erlang total concurrent processes
+
+export ELIXIR_ERL_OPTIONS="+P 10000000"
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 by adding `sup` to your list of dependencies in `mix.exs`:
