@@ -1,7 +1,7 @@
-defmodule ViewerServer do
+defmodule Sup.Session.SessionServer do
   use GenServer, restart: :temporary
   alias Phoenix.PubSub
-  alias Structs.Viewer
+  alias Sup.Session.Viewer
 
   require Logger
 
@@ -21,7 +21,7 @@ defmodule ViewerServer do
 
   def handle_info(:terminate_if_timeout, viewer) do
     if now_ms() - viewer.last_heartbeat > viewer.window_ms do
-      CurrentViewersDynamicSupervisor.remove_viewer(self())
+      Sup.Session.SessionManager.remove_viewer(self())
     else
       schedule_verification(viewer)
     end

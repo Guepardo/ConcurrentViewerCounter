@@ -1,7 +1,7 @@
-defmodule CurrentViewersDynamicSupervisor do
+defmodule Sup.Session.SessionManager do
   use DynamicSupervisor
   alias Phoenix.PubSub
-  alias Structs.Viewer
+  alias Sup.Session.Viewer
 
   require Logger
 
@@ -17,7 +17,7 @@ defmodule CurrentViewersDynamicSupervisor do
       session_id: session_id || generate_session_id()
     }
 
-    DynamicSupervisor.start_child(__MODULE__, {ViewerServer, viewer})
+    DynamicSupervisor.start_child(__MODULE__, {Sup.SessionServer, viewer})
 
     viewer
   end

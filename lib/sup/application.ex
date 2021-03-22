@@ -14,12 +14,12 @@ defmodule Sup.Application do
     ]
 
     children = [
-      {Cluster.Supervisor, [topologies, [name: :name_this]]},
+      {Cluster.Supervisor, [topologies, [name: :cluster_supervisor]]},
       # Starts a worker by calling: Sup.Worker.start_link(arg)
       # {Sup.Worker, arg}
-      {Cachex, name: :my_cache_name},
       {Phoenix.PubSub, name: :pubsub},
-      {CurrentViewersDynamicSupervisor, {}}
+      {Sup.Session.SessionManager, {}},
+      {Sup.Heartbeat.Supervisor, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
