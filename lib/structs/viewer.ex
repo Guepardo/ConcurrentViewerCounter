@@ -1,3 +1,3 @@
 defmodule Structs.Viewer do
-  defstruct [:name, :window_ms, :session, :pid, :last_heartbeat]
+  defstruct [:window_ms, :session_id, :last_heartbeat]
 end

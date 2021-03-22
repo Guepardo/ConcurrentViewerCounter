@@ -11,23 +11,35 @@ defmodule CurrentViewersDynamicSupervisor do
   def init(_args),
     do: DynamicSupervisor.init(strategy: :one_for_one)
 
-  def add_viewer(name) do
+  def add(session_id) do
     viewer = %Viewer{
-      name: name,
       window_ms: 120 * 1000,
-      session: Base.encode64(:crypto.strong_rand_bytes(16))
+      session_id: session_id || generate_session_id()
     }
 
-    {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {ViewerServer, viewer})
+    DynamicSupervisor.start_child(__MODULE__, {ViewerServer, viewer})
 
-    %Viewer{viewer | pid: pid}
+    viewer
   end
 
   def remove_viewer(pid) do
     DynamicSupervisor.terminate_child(__MODULE__, pid)
   end
 
-  def heartbeat(session) do
-    PubSub.broadcast_from!(:pubsub, self(), session, {:heartbeat})
+  def heartbeat(%Viewer{session_id: session_id}) do
+    ref = make_ref()
+    PubSub.broadcast_from!(:pubsub, self(), session_id, {:heartbeat, self(), ref})
+
+    receive do
+      {:ack, ^ref} ->
+        :ok
+      after
+        1000 ->
+          add(session_id)
+    end
+  end
+
+  defp generate_session_id do
+    Base.encode64(:crypto.strong_rand_bytes(16))
   end
 end
