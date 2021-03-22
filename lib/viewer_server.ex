@@ -1,44 +1,48 @@
 defmodule ViewerServer do
   use GenServer, restart: :temporary
   alias Phoenix.PubSub
+  alias Structs.Viewer
 
   require Logger
-  def start_link(viewer) do
-    GenServer.start_link(__MODULE__, viewer)
-  end
+
+  def start_link(viewer), do: GenServer.start_link(__MODULE__, viewer)
 
   def init(viewer) do
-    :ok = PubSub.subscribe(:pubsub, viewer.session)
+    :ok = PubSub.subscribe(:pubsub, viewer.session, link: true)
 
-    {:ok, viewer, {:continue, :watch}}
+    {:ok, %Viewer{viewer | last_heartbeat: now_ms()}, {:continue, :watch}}
   end
 
   def handle_continue(:watch, viewer) do
-
     schedule_verification(viewer)
 
     {:noreply, viewer}
   end
 
-  def handle_info(:terminate_if_timeouted, viewer) do
-    schedule_verification(viewer)
-
-    #Logger.info("Checking if needs terminate.. #{viewer.name}")
+  def handle_info(:terminate_if_timeout, viewer) do
+    if now_ms() - viewer.last_heartbeat > viewer.window_ms do
+      # Logger.info("Terminate #{viewer.name} process")
+      CurrentViewersDynamicSupervisor.remove_viewer(self())
+    else
+      # Logger.info("Check in the next #{viewer.name} verification")
+      schedule_verification(viewer)
+    end
 
     {:noreply, viewer}
   end
 
   def handle_info({:heartbeat}, viewer) do
     Logger.info("Heartbeat #{viewer.name}")
-
-    {:noreply, viewer}
+    {:noreply, %Viewer{viewer | last_heartbeat: now_ms()}}
   end
 
-  defp process_name(viewer) do
-    String.to_atom("viewer_id_#{viewer.name}_server")
+  def terminate(reason, _viewer) do
+    # Logger.info(reason)
+    :ok
   end
 
-  defp schedule_verification(viewer) do
-    Process.send_after(self(), :terminate_if_timeouted, viewer.window_ms)
-  end
+  defp now_ms, do: System.system_time(:millisecond)
+
+  defp schedule_verification(viewer),
+    do: Process.send_after(self(), :terminate_if_timeout, viewer.window_ms)
 end
