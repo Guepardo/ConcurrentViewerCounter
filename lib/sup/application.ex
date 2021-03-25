@@ -18,7 +18,7 @@ defmodule Sup.Application do
       # Starts a worker by calling: Sup.Worker.start_link(arg)
       # {Sup.Worker, arg}
       {Phoenix.PubSub, name: :pubsub},
-      {Sup.Session.SessionManager, {}},
+      {Sup.Session.Manager, []},
       {Sup.Heartbeat.Supervisor, []}
     ]
 

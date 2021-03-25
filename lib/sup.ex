@@ -1,4 +1,5 @@
 defmodule Sup do
+  require Logger
   @moduledoc """
   Documentation for `Sup`.
   """
@@ -13,6 +14,8 @@ defmodule Sup do
 
   """
   def hello do
-    :world
+    Logger.info("start")
+    for _ <- 0..1_000_000, do: Sup.Session.Manager.add(nil)
+    Logger.info("ended")
   end
 end
